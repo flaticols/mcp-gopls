@@ -570,7 +570,10 @@ func NewGoplsWrapper() (*GoplsWrapper, error) {
 		return nil, fmt.Errorf("gopls not found in PATH: %v", err)
 	}
 
-	cmd := exec.Command(goplsPath, "-rpc.trace")
+	// Default args
+	args := []string{"-rpc.trace"}
+	
+	cmd := exec.Command(goplsPath, args...)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create stdin pipe: %v", err)
@@ -1291,6 +1294,7 @@ type Config struct {
 	Env                []string
 	DirectoryFilters   []string
 	CompletionBudget   string
+	Verbose            bool
 }
 
 // NewConfig creates a new default configuration.
@@ -1302,5 +1306,6 @@ func NewConfig() *Config {
 		HoverKind:          "FullDocumentation",
 		DirectoryFilters:   []string{"-node_modules"},
 		CompletionBudget:   "100ms",
+		Verbose:            false,
 	}
 }
