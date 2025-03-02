@@ -8,6 +8,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/jessevdk/go-flags v1.6.1 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
+	github.com/lmittmann/tint v1.0.7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
