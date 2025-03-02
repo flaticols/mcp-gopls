@@ -1,4 +1,4 @@
-# MCP-GOPLS
+# mcp-gopls
 
 > **⚠️ WARNING: EARLY DEVELOPMENT STAGE**  
 > This project is still in active development and **NOT READY FOR PRODUCTION USE**.  
