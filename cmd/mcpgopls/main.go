@@ -1,14 +1,15 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/flaticols/mcpgopls/internal/gopls"
 	"github.com/flaticols/mcpgopls/internal/mcp"
 	"github.com/jessevdk/go-flags"
+	"github.com/lmittmann/tint"
 )
 
 type Options struct {
@@ -31,11 +32,25 @@ func main() {
 			os.Exit(1)
 		}
 	}
+	
+	// Configure colored logger
+	logLevel := slog.LevelInfo
+	if opts.Verbose {
+		logLevel = slog.LevelDebug
+	}
+	
+	handler := tint.NewHandler(os.Stderr, &tint.Options{
+		Level:      logLevel,
+		TimeFormat: time.Kitchen,
+	})
+	logger := slog.New(handler)
+	slog.SetDefault(logger)
 
 	// Ensure root directory is absolute
 	rootDir, err := filepath.Abs(opts.RootDir)
 	if err != nil {
-		log.Fatalf("Failed to resolve root directory: %v", err)
+		slog.Error("Failed to resolve root directory", "error", err)
+		os.Exit(1)
 	}
 
 	// Configure gopls
@@ -47,23 +62,28 @@ func main() {
 	// Create the server
 	server, err := mcp.NewClaudeGoplsServer(config, rootDir)
 	if err != nil {
-		log.Fatalf("Failed to create server: %v", err)
+		slog.Error("Failed to create server", "error", err)
+		os.Exit(1)
 	}
 
 	// Start gopls
 	err = server.Start()
 	if err != nil {
-		log.Fatalf("Failed to start gopls: %v", err)
+		slog.Error("Failed to start gopls", "error", err)
+		os.Exit(1)
 	}
 	defer server.Stop()
 
 	// Start command server
-	fmt.Printf("Starting MCP-GOPLS server on %s:%d with root directory: %s\n",
-		opts.ServerListen, opts.ServerPort, rootDir)
+	slog.Info("Starting MCP-GOPLS server", 
+		"host", opts.ServerListen,
+		"port", opts.ServerPort,
+		"rootDir", rootDir)
 
 	// Create and configure HTTP server to handle commands
 	if err := setupCommandServer(opts.ServerListen, opts.ServerPort, server); err != nil {
-		log.Fatalf("Failed to start command server: %v", err)
+		slog.Error("Failed to start command server", "error", err)
+		os.Exit(1)
 	}
 }
 

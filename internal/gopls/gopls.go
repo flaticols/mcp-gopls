@@ -15,6 +15,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
+
+	"github.com/lmittmann/tint"
 )
 
 // LSP Protocol types
@@ -612,12 +615,23 @@ func (w *GoplsWrapper) Start() error {
 		return fmt.Errorf("failed to start gopls: %v", err)
 	}
 
+	// Set up the default logger if not configured
+	if slog.Default() == nil {
+		// Use tint for colored logs
+		handler := tint.NewHandler(os.Stderr, &tint.Options{
+			Level:      slog.LevelInfo,
+			TimeFormat: time.Kitchen,
+		})
+		slog.SetDefault(slog.New(handler))
+	}
+	
 	// Start a goroutine to read messages from stdout
 	go w.readMessages()
 
 	// Start a goroutine to handle stderr output
 	go w.readStderr()
 
+	slog.Info("Gopls process started successfully")
 	return nil
 }
 
@@ -1295,10 +1309,17 @@ type Config struct {
 	DirectoryFilters   []string
 	CompletionBudget   string
 	Verbose            bool
+	Logger             *slog.Logger
 }
 
 // NewConfig creates a new default configuration.
 func NewConfig() *Config {
+	// Configure colored logger using tint
+	logger := slog.New(tint.NewHandler(os.Stderr, &tint.Options{
+		Level:      slog.LevelInfo,
+		TimeFormat: time.Kitchen,
+	}))
+
 	return &Config{
 		EnvVars:            make(map[string]string),
 		GoplsPath:          "gopls",
@@ -1307,5 +1328,6 @@ func NewConfig() *Config {
 		DirectoryFilters:   []string{"-node_modules"},
 		CompletionBudget:   "100ms",
 		Verbose:            false,
+		Logger:             logger,
 	}
 }
